@@ -1,0 +1,8 @@
+//
+// Created by Daniel Marchese on 8/29/15.
+//
+
+#ifndef EMULATORCORE_COREEMULATOR_H
+#define EMULATORCORE_COREEMULATOR_H
+
+#endif //EMULATORCORE_COREEMULATOR_H
