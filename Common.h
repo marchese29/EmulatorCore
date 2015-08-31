@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstdarg>
 
 #define Log(msg, ...) (log_msg(msg, ##__VA_ARGS__))
 
