@@ -17,6 +17,7 @@ public:
     virtual ~MemoryController() { }
     virtual uint8_t read(uint16_t addr) = 0;
     virtual void write(uint16_t addr, uint8_t value) = 0;
+    virtual void reset() = 0;
 };
 
 #endif //EMULATORCORE_MEMORYCONTROLLER_H

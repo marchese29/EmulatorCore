@@ -8,10 +8,12 @@
 #include "../Common.h"
 
 class MemoryController;
+class InternalMemoryController;
 
 class MemoryMap {
 private:
     MemoryController *_cartridgeController;
+    InternalMemoryController *_internalController;
 public:
     MemoryMap();
 
@@ -24,7 +26,7 @@ public:
     void write(uint16_t addr, uint8_t value);
 };
 
-const static uint8_t bios[256] = {
+const static uint8_t BIOS[0x100] = {
     0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
     0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77, 0x77, 0x3E, 0xFC, 0xE0,
     0x47, 0x11, 0x04, 0x01, 0x21, 0x10, 0x80, 0x1A, 0xCD, 0x95, 0x00, 0xCD, 0x96, 0x00, 0x13, 0x7B,
@@ -48,13 +50,15 @@ const static uint8_t bios[256] = {
 };
 
 #include "Controllers/MemoryController.h"
+#include "Controllers/InternalMemoryController.h"
 
 inline uint8_t MemoryMap::read(uint16_t addr) {
     switch (addr & 0xE000) {
         case 0x0000:
+            // If we are booting, this memory is internal to the GameBoy (it's the BIOS).
             // TODO: Check if we are still in the middle of boot
             if (addr < 0x100)
-                return bios[addr];
+                return BIOS[addr];
             // Otherwise, this memory belongs to the cartridge.
         case 0x2000: case 0x4000: case 0x6000:
             // This memory belongs to the cartridge.
@@ -68,8 +72,7 @@ inline uint8_t MemoryMap::read(uint16_t addr) {
             return _cartridgeController->read(addr);
         case 0xC000:
             // This is the gameboy's internal working RAM.
-            // TODO: Read from the working RAM controller.
-            return 0x0;
+            return _internalController->read(addr);
         case 0xE000:
             // There are a couple things that can happen in this memory space
             if (addr < 0xFE00) {
@@ -80,6 +83,7 @@ inline uint8_t MemoryMap::read(uint16_t addr) {
                 // This area is used for Memory-Mapped IO
             } else {
                 // This area is HRAM.
+                return _internalController->read(addr);
             }
             return 0x0;
         default:
@@ -103,6 +107,7 @@ inline void MemoryMap::write(uint16_t addr, uint8_t value) {
             break;
         case 0xC000:
             // This is the gameboy's internal working RAM.
+            _internalController->write(addr, value);
             break;
         case 0xE000:
             // There are a couple things that can happen in this memory space
@@ -114,6 +119,7 @@ inline void MemoryMap::write(uint16_t addr, uint8_t value) {
                 // This area is used for Memory-Mapped IO
             } else {
                 // This area is HRAM
+                _internalController->write(addr, value);
             }
             break;
         default:
