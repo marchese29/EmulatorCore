@@ -9,11 +9,13 @@
 
 class MemoryController;
 class InternalMemoryController;
+class MMIORegisterController;
 
 class MemoryMap {
 private:
     MemoryController *_cartridgeController;
     InternalMemoryController *_internalController;
+    MMIORegisterController *_mmioRegisterController;
 public:
     MemoryMap();
 
@@ -51,6 +53,7 @@ const static uint8_t BIOS[0x100] = {
 
 #include "Controllers/MemoryController.h"
 #include "Controllers/InternalMemoryController.h"
+#include "Controllers/MMIORegisterController.h"
 
 inline uint8_t MemoryMap::read(uint16_t addr) {
     switch (addr & 0xE000) {
@@ -81,6 +84,7 @@ inline uint8_t MemoryMap::read(uint16_t addr) {
                 // This area contains information about the sprites
             } else if (addr < 0xFF80) {
                 // This area is used for Memory-Mapped IO
+                return _mmioRegisterController->read(addr);
             } else {
                 // This area is HRAM.
                 return _internalController->read(addr);
@@ -117,6 +121,7 @@ inline void MemoryMap::write(uint16_t addr, uint8_t value) {
                 // This area is the sprite attribute memory
             } else if (addr < 0xFF80) {
                 // This area is used for Memory-Mapped IO
+                _mmioRegisterController->write(addr, value);
             } else {
                 // This area is HRAM
                 _internalController->write(addr, value);
